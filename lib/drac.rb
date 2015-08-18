@@ -2,12 +2,15 @@ require 'cassandra'
 
 class Drac
   attr_reader :session
-
+  
   class KeyNameUndefined < StandardError; end
 
-  def initialize(hosts, keyspace, compute_handlers = {})
+  def initialize(hosts, keyspace)
     cluster = Cassandra.cluster(hosts: hosts)
     @session = cluster.connect(keyspace)
+  end
+
+  def check_tables_for_computers(computers)
   end
 
   def get(computer, collection_options = [])
