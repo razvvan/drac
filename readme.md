@@ -1,4 +1,4 @@
-[![Build Status](https://magnum.travis-ci.com/dawanda/drac.svg?branch=master)](https://magnum.travis-ci.com/dawanda/drac)
+[![Build Status](https://travis-ci.org/dawanda/drac.svg?branch=master)](https://travis-ci.org/dawanda/drac)
 
 # Data Retreival Accelerator - [Cassandra](https://cassandra.apache.org/) based caching mechanism
 
