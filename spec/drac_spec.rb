@@ -1,7 +1,7 @@
-require_relative 'dra'
+require 'drac'
 
 module TestDataSourceCache
-  extend DRA::Computer
+  extend Drac::Computer
 
   def self.key_name(opts)
     "foo_#{opts.fetch(:id)}"
@@ -17,14 +17,14 @@ module TestDataSourceCache
 end
 
 module ReadOnlyDataSource
-  extend DRA::Computer
+  extend Drac::Computer
 end
 
-RSpec.describe "DRA with real data" do
+RSpec.describe "Drac with real data" do
   let(:prepared_statement) { double('prepared_statement') }
   let(:session) { double('session', prepare: prepared_statement) }
   let(:cluster) { double('cluster', connect: session) }
-  let(:dra) { DRA.new(['some-hostname'], 'some-keyspace') }
+  let(:drac) { Drac.new(['some-hostname'], 'some-keyspace') }
 
   before do
     expect(Cassandra).to receive(:cluster).with(hosts: ['some-hostname']) { cluster }
@@ -32,23 +32,23 @@ RSpec.describe "DRA with real data" do
 
   context 'reading' do
     it 'reads one key from cassandra' do
-      opts = { arguments: { table_name: 'dra_testdatasourcecache', keys: ['foo_12'] } }
+      opts = { arguments: { table_name: 'drac_testdatasourcecache', keys: ['foo_12'] } }
       expect(session).to receive(:execute).with(prepared_statement, opts).
         and_return([{ 'keyname' => 'foo_12', 'content' => 'bar' }])
 
-      result = dra.get(TestDataSourceCache, [{ id: 12 }])
+      result = drac.get(TestDataSourceCache, [{ id: 12 }])
       expect(result).not_to be_empty
     end
 
     it 'reads many keys' do
-      opts = { arguments: { table_name: 'dra_testdatasourcecache', keys: ['foo_12', 'foo_13'] } }
+      opts = { arguments: { table_name: 'drac_testdatasourcecache', keys: ['foo_12', 'foo_13'] } }
       expect(session).to receive(:execute).with(prepared_statement, opts).
         and_return([
           { 'keyname' => 'foo_12', 'content' => 'bar' },
           { 'keyname' => 'foo_13', 'content' => 'bar' }
         ])
 
-      result = dra.get(TestDataSourceCache, [{ id: 12 }, { id: 13 }])
+      result = drac.get(TestDataSourceCache, [{ id: 12 }, { id: 13 }])
       expect(result.count).to eq 2
     end
   end
@@ -61,7 +61,7 @@ RSpec.describe "DRA with real data" do
     it "computes the value if it doesn't exist" do
       expect(session).to receive(:execute_async)
 
-      result = dra.get(TestDataSourceCache, [{ id: 42 }])
+      result = drac.get(TestDataSourceCache, [{ id: 42 }])
       expect(result.count).to eq 1
       expect(result.values.first).to eq 'something with 42'
     end
@@ -70,7 +70,7 @@ RSpec.describe "DRA with real data" do
       expect(session).to receive(:execute_async).
         with(prepared_statement, { arguments: { keyname: 'foo_43', content: 'something with 43' } })
 
-      result = dra.get(TestDataSourceCache, [{ id: 43 }])
+      result = drac.get(TestDataSourceCache, [{ id: 43 }])
 
       expect(result.count).to eq 1
       expect(result.values.first).to eq 'something with 43'
@@ -80,14 +80,14 @@ RSpec.describe "DRA with real data" do
       expect(session).to receive(:prepare).with(/select/).once
       expect(session).to receive(:prepare).with(/insert.*ttl 1/).once
       expect(session).to receive(:execute_async)
-      dra.get(TestDataSourceCache, [{ id: 44 }])
+      drac.get(TestDataSourceCache, [{ id: 44 }])
     end
   end
 
   describe ReadOnlyDataSource do
     it "fails if you don't have a keyname defined" do
-      expect { dra.get(described_class, [{ id: 12 }]) }.
-        to raise_error(DRA::KeyNameUndefined)
+      expect { drac.get(described_class, [{ id: 12 }]) }.
+        to raise_error(Drac::KeyNameUndefined)
     end
 
     it "should not persist if `compute` is undefined" do
@@ -96,7 +96,7 @@ RSpec.describe "DRA with real data" do
 
       expect(session).not_to receive(:execute_async)
 
-      dra.get(described_class, [{ id: 12 }])
+      drac.get(described_class, [{ id: 12 }])
     end
   end
 end

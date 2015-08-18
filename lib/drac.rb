@@ -1,6 +1,6 @@
 require 'cassandra'
 
-class DRA
+class Drac
   attr_reader :session
 
   class KeyNameUndefined < StandardError; end
@@ -66,7 +66,7 @@ class DRA
     end
 
     def table_name
-      "dra_#{name.downcase}"
+      "drac_#{name.downcase}"
     end
 
     def zip_with_key(collection)
