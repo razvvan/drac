@@ -2,7 +2,7 @@ require 'cassandra'
 
 class Drac
   attr_reader :session
-  
+
   class KeyNameUndefined < StandardError; end
 
   def initialize(hosts, keyspace)
@@ -10,7 +10,8 @@ class Drac
     @session = cluster.connect(keyspace)
   end
 
-  def check_tables_for_computers(computers)
+  def create_tables(computers)
+    computers.each { |computer| create_table(computer) unless table_exists?(computer) }
   end
 
   def get(computer, collection_options = [])
@@ -26,6 +27,18 @@ class Drac
   end
 
   private
+
+  def table_exists?(computer)
+    statement = "SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name='somekeyspace' and columnfamily_name=:table_name;"
+    prepared_statement = @session.prepare(statement)
+    args = { table_name: computer.table_name }
+    @session.execute(session.prepare(statement), arguments: args).count == 1
+  end
+
+  def create_table(computer)
+    statement = "create table #{computer.table_name} (keyname varchar PRIMARY KEY, content text);"
+    @session.execute(statement)
+  end
 
   def fetch_content(table_name, keys)
     statement = "select keyname, content from #{table_name} where keyname in :keys;"
