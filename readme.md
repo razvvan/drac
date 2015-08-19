@@ -20,5 +20,26 @@ cqlsh> CREATE KEYSPACE somekeyspace
 
 ```
 require 'drac'
-Drac.new(['192.168.99.100'], 'somekeyspace')
+drac = Drac.new(['192.168.99.100'], 'somekeyspace')
+
+module TestDataSourceCache
+  extend Drac::Computer
+
+  def self.key_name(opts)
+    "foo_#{opts.fetch(:id)}"
+  end
+
+  def self.compute(opts)
+    sleep(3)
+    "something with #{opts.fetch(:id)}"
+  end
+
+  def self.ttl
+    30
+  end
+end
+drac.create_tables([TestDataSourceCache])
+
+drac.get(TestDataSourceCache, [{ id: 23 }])
+drac.get(TestDataSourceCache, [{ id: 23 }])
 ```
