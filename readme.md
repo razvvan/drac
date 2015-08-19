@@ -8,7 +8,10 @@ First, get Cassandra.
 
 ```
 docker run --name some-cassandra -d cassandra -p 9042:9042
-docker run --rm cassandra --link cassandra:cassandra /bin/bash
+docker run --rm -it --link some-cassandra:cassandra cassandra cqlsh cassandra
+cqlsh> CREATE KEYSPACE somekeyspace
+  WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };
+
 ```
 
 
@@ -17,5 +20,5 @@ docker run --rm cassandra --link cassandra:cassandra /bin/bash
 
 ```
 require 'drac'
-Drac.new(['192.168.99.100'], 'some-keyspace')
+Drac.new(['192.168.99.100'], 'somekeyspace')
 ```
